@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>רשתות - דשבורד תחרות מחירים</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 1.5rem;
+            color: #38bdf8;
+        }
+        .header .subtitle { color: #94a3b8; font-size: 0.9rem; }
+
+        .stats-bar {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1rem 2rem;
+            background: #1e293b;
+            border-bottom: 1px solid #334155;
+            flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            min-width: 140px;
+        }
+        .stat-card .value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #38bdf8;
+        }
+        .stat-card .label { font-size: 0.8rem; color: #94a3b8; }
+
+        .main { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .search-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        .search-row {
+            display: flex;
+            gap: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .search-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 0.625rem 1rem;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 1rem;
+        }
+        .search-input::placeholder { color: #64748b; }
+        .city-select {
+            padding: 0.625rem 1rem;
+            border: 1px solid #475569;
+            border-radius: 8px;
+            background: #0f172a;
+            color: #e2e8f0;
+            font-size: 0.95rem;
+            min-width: 180px;
+        }
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+        .btn-primary { background: #2563eb; color: white; }
+        .btn-primary:hover { background: #1d4ed8; }
+        .btn-secondary { background: #334155; color: #e2e8f0; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+        .card h3 {
+            font-size: 1.1rem;
+            color: #38bdf8;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 0.5rem;
+        }
+        .card.full { grid-column: 1 / -1; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th {
+            text-align: right;
+            padding: 0.5rem;
+            color: #94a3b8;
+            border-bottom: 1px solid #334155;
+            font-weight: 600;
+        }
+        td {
+            padding: 0.5rem;
+            border-bottom: 1px solid #1e293b;
+        }
+        tr:hover td { background: #0f172a; }
+
+        .price-cheap { color: #4ade80; font-weight: 600; }
+        .price-expensive { color: #f87171; font-weight: 600; }
+        .price-neutral { color: #e2e8f0; }
+        .spread-high { color: #f87171; }
+        .spread-low { color: #4ade80; }
+
+        .chart-container { position: relative; height: 300px; }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #64748b;
+        }
+        .empty-state .icon { font-size: 3rem; margin-bottom: 1rem; }
+        .loading { opacity: 0.5; pointer-events: none; }
+
+        .tag {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .tag-green { background: #065f46; color: #6ee7b7; }
+        .tag-red { background: #7f1d1d; color: #fca5a5; }
+        .tag-blue { background: #1e3a5f; color: #93c5fd; }
+
+        .clickable { cursor: pointer; }
+        .clickable:hover { text-decoration: underline; color: #38bdf8; }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>רשתות - דשבורד תחרות מחירים</h1>
+        <div class="subtitle">שקיפות מחירים | חוק קידום התחרות בענף המזון</div>
+    </div>
+</div>
+
+<div class="stats-bar" id="stats-bar">
+    <div class="stat-card"><div class="value" id="stat-chains">-</div><div class="label">רשתות</div></div>
+    <div class="stat-card"><div class="value" id="stat-products">-</div><div class="label">מוצרים</div></div>
+    <div class="stat-card"><div class="value" id="stat-stores">-</div><div class="label">סניפים</div></div>
+    <div class="stat-card"><div class="value" id="stat-cities">-</div><div class="label">ערים</div></div>
+    <div class="stat-card"><div class="value" id="stat-records">-</div><div class="label">רשומות מחיר</div></div>
+</div>
+
+<div class="main">
+    <!-- Search & Filter -->
+    <div class="search-section">
+        <div class="search-row">
+            <input type="text" class="search-input" id="product-search"
+                   placeholder="חפש מוצר לפי שם או ברקוד..." />
+            <select class="city-select" id="city-select">
+                <option value="">בחר עיר / אזור...</option>
+            </select>
+            <button class="btn btn-primary" onclick="searchProduct()">חפש</button>
+            <button class="btn btn-secondary" onclick="loadTopSpreads()">פערי מחיר גדולים</button>
+        </div>
+    </div>
+
+    <!-- Results Grid -->
+    <div class="grid">
+        <!-- Product Search Results -->
+        <div class="card" id="search-results-card">
+            <h3>תוצאות חיפוש</h3>
+            <div id="search-results">
+                <div class="empty-state">
+                    <div class="icon">&#128269;</div>
+                    <div>חפש מוצר כדי להשוות מחירים בין רשתות</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- City Competition -->
+        <div class="card" id="city-competition-card">
+            <h3>תחרות אזורית</h3>
+            <div id="city-competition">
+                <div class="empty-state">
+                    <div class="icon">&#127961;</div>
+                    <div>בחר עיר כדי לראות את התחרות באזור</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Detail (Chain Comparison Chart) -->
+        <div class="card" id="product-detail-card" style="display:none;">
+            <h3 id="product-detail-title">השוואת מחירים</h3>
+            <div class="chart-container">
+                <canvas id="chain-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- City Chain Price Index -->
+        <div class="card" id="city-index-card" style="display:none;">
+            <h3 id="city-index-title">מדד מחירים לפי רשת</h3>
+            <div class="chart-container">
+                <canvas id="city-chart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Price Spreads -->
+        <div class="card full" id="top-spreads-card" style="display:none;">
+            <h3>מוצרים עם פערי המחיר הגדולים ביותר</h3>
+            <div id="top-spreads"></div>
+        </div>
+
+        <!-- Product by City -->
+        <div class="card full" id="product-cities-card" style="display:none;">
+            <h3 id="product-cities-title">תחרות לפי אזור</h3>
+            <div id="product-cities"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chainChart = null;
+let cityChart = null;
+
+// ── Init ──
+async function init() {
+    const [statsResp, citiesResp] = await Promise.all([
+        fetch('/api/stats'),
+        fetch('/api/cities'),
+    ]);
+    const stats = await statsResp.json();
+    const cities = await citiesResp.json();
+
+    document.getElementById('stat-chains').textContent = stats.total_chains.toLocaleString();
+    document.getElementById('stat-products').textContent = stats.total_products.toLocaleString();
+    document.getElementById('stat-stores').textContent = stats.total_stores.toLocaleString();
+    document.getElementById('stat-cities').textContent = stats.total_cities.toLocaleString();
+    document.getElementById('stat-records').textContent = stats.total_price_records.toLocaleString();
+
+    const select = document.getElementById('city-select');
+    cities.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.city;
+        opt.textContent = `${c.city} (${c.chain_count} רשתות)`;
+        select.appendChild(opt);
+    });
+
+    select.addEventListener('change', () => {
+        if (select.value) loadCityCompetition(select.value);
+    });
+
+    document.getElementById('product-search').addEventListener('keyup', (e) => {
+        if (e.key === 'Enter') searchProduct();
+    });
+
+    if (!stats.data_loaded || stats.total_price_records === 0) {
+        document.getElementById('search-results').innerHTML =
+            '<div class="empty-state"><div class="icon">&#128230;</div>' +
+            '<div>אין נתונים עדיין. הרץ <code>python main.py --fetch</code> כדי להוריד נתוני מחירים.</div></div>';
+    }
+}
+
+// ── Search Products ──
+async function searchProduct() {
+    const query = document.getElementById('product-search').value.trim();
+    if (!query) return;
+
+    const resp = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    const products = await resp.json();
+    const container = document.getElementById('search-results');
+
+    if (!products.length) {
+        container.innerHTML = '<div class="empty-state">לא נמצאו תוצאות</div>';
+        return;
+    }
+
+    let html = '<table><thead><tr>' +
+        '<th>מוצר</th><th>ברקוד</th><th>מחיר ממוצע</th><th>מינימום</th><th>מקסימום</th><th>פער</th><th>רשתות</th>' +
+        '</tr></thead><tbody>';
+
+    products.forEach(p => {
+        const spreadClass = p.spread_pct > 30 ? 'spread-high' : 'spread-low';
+        html += `<tr class="clickable" onclick="loadProductDetail('${p.item_code}')">
+            <td>${p.item_name || '-'}</td>
+            <td>${p.item_code}</td>
+            <td>${p.avg_price.toFixed(2)} &#8362;</td>
+            <td class="price-cheap">${p.min_price.toFixed(2)} &#8362;</td>
+            <td class="price-expensive">${p.max_price.toFixed(2)} &#8362;</td>
+            <td class="${spreadClass}">${p.price_spread.toFixed(2)} &#8362;</td>
+            <td><span class="tag tag-blue">${p.chain_count}</span></td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// ── Product Detail ──
+async function loadProductDetail(itemCode) {
+    const resp = await fetch(`/api/product/${itemCode}`);
+    const data = await resp.json();
+    if (!data.item_code) return;
+
+    // Chain comparison chart
+    const card = document.getElementById('product-detail-card');
+    card.style.display = '';
+    document.getElementById('product-detail-title').textContent =
+        `השוואת מחירים: ${data.item_name || data.item_code}`;
+
+    const labels = data.by_chain.map(c => c.chain);
+    const prices = data.by_chain.map(c => c.avg_price);
+    const colors = prices.map((p, i) => {
+        if (i === 0) return '#4ade80';
+        if (i === prices.length - 1) return '#f87171';
+        return '#38bdf8';
+    });
+
+    if (chainChart) chainChart.destroy();
+    chainChart = new Chart(document.getElementById('chain-chart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'מחיר ממוצע (₪)',
+                data: prices,
+                backgroundColor: colors,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+                y: { ticks: { color: '#e2e8f0' }, grid: { display: false } },
+            }
+        }
+    });
+
+    // City competition table for this product
+    const citiesCard = document.getElementById('product-cities-card');
+    const citiesContainer = document.getElementById('product-cities');
+    document.getElementById('product-cities-title').textContent =
+        `תחרות אזורית: ${data.item_name || data.item_code}`;
+
+    if (data.by_city && data.by_city.length > 0) {
+        citiesCard.style.display = '';
+        let html = '<table><thead><tr>' +
+            '<th>עיר</th><th>רשתות</th><th>זול ביותר</th><th>מחיר</th><th>יקר ביותר</th><th>מחיר</th><th>פער %</th>' +
+            '</tr></thead><tbody>';
+        data.by_city.forEach(c => {
+            html += `<tr>
+                <td>${c.city}</td>
+                <td><span class="tag tag-blue">${c.chains_count}</span></td>
+                <td class="price-cheap">${c.cheapest_chain}</td>
+                <td class="price-cheap">${c.cheapest_price.toFixed(2)} &#8362;</td>
+                <td class="price-expensive">${c.expensive_chain}</td>
+                <td class="price-expensive">${c.expensive_price.toFixed(2)} &#8362;</td>
+                <td class="${c.price_gap_pct > 20 ? 'spread-high' : 'spread-low'}">${c.price_gap_pct}%</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+        citiesContainer.innerHTML = html;
+    } else {
+        citiesCard.style.display = 'none';
+    }
+}
+
+// ── City Competition ──
+async function loadCityCompetition(city) {
+    const resp = await fetch(`/api/competition?city=${encodeURIComponent(city)}`);
+    const data = await resp.json();
+
+    const container = document.getElementById('city-competition');
+    if (!data.chains || !data.chains.length) {
+        container.innerHTML = `<div class="empty-state">אין נתוני תחרות עבור ${city}</div>`;
+        return;
+    }
+
+    // Price index chart
+    const indexCard = document.getElementById('city-index-card');
+    indexCard.style.display = '';
+    document.getElementById('city-index-title').textContent = `מדד מחירים: ${city}`;
+
+    const labels = data.chains.map(c => c.chain);
+    const indices = data.chains.map(c => c.price_index);
+    const bgColors = indices.map(v => v < 100 ? '#4ade80' : v > 100 ? '#f87171' : '#38bdf8');
+
+    if (cityChart) cityChart.destroy();
+    cityChart = new Chart(document.getElementById('city-chart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'מדד מחיר (100 = ממוצע)',
+                data: indices,
+                backgroundColor: bgColors,
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                annotation: {
+                    annotations: {
+                        line: { type: 'line', yMin: 100, yMax: 100, borderColor: '#64748b', borderDash: [5,5] }
+                    }
+                }
+            },
+            scales: {
+                x: { ticks: { color: '#e2e8f0' }, grid: { display: false } },
+                y: { ticks: { color: '#94a3b8' }, grid: { color: '#334155' } },
+            }
+        }
+    });
+
+    // Competitive products table
+    let html = `<div style="margin-bottom:0.75rem;color:#94a3b8">${data.total_competitive_products} מוצרים תחרותיים</div>`;
+    if (data.products.length) {
+        html += '<table><thead><tr>' +
+            '<th>מוצר</th><th>פער %</th><th>מחירים לפי רשת</th>' +
+            '</tr></thead><tbody>';
+        data.products.slice(0, 15).forEach(p => {
+            const chainPrices = Object.entries(p.chain_prices)
+                .map(([chain, price]) => `<span class="tag tag-blue" style="margin:2px">${chain}: ${price}₪</span>`)
+                .join(' ');
+            html += `<tr class="clickable" onclick="loadProductDetail('${p.item_code}')">
+                <td>${p.item_name || p.item_code}</td>
+                <td class="${p.spread_pct > 20 ? 'spread-high' : 'spread-low'}">${p.spread_pct}%</td>
+                <td>${chainPrices}</td>
+            </tr>`;
+        });
+        html += '</tbody></table>';
+    }
+    container.innerHTML = html;
+}
+
+// ── Top Spreads ──
+async function loadTopSpreads() {
+    const resp = await fetch('/api/top-spreads');
+    const products = await resp.json();
+
+    const card = document.getElementById('top-spreads-card');
+    card.style.display = '';
+    const container = document.getElementById('top-spreads');
+
+    if (!products.length) {
+        container.innerHTML = '<div class="empty-state">אין נתונים</div>';
+        return;
+    }
+
+    let html = '<table><thead><tr>' +
+        '<th>מוצר</th><th>ברקוד</th><th>מחיר ממוצע</th><th>מינימום</th><th>מקסימום</th><th>פער %</th><th>רשתות</th>' +
+        '</tr></thead><tbody>';
+    products.forEach(p => {
+        html += `<tr class="clickable" onclick="loadProductDetail('${p.item_code}')">
+            <td>${p.item_name || '-'}</td>
+            <td>${p.item_code}</td>
+            <td>${p.avg_price.toFixed(2)} &#8362;</td>
+            <td class="price-cheap">${p.min_price.toFixed(2)} &#8362;</td>
+            <td class="price-expensive">${p.max_price.toFixed(2)} &#8362;</td>
+            <td class="spread-high">${p.spread_pct}%</td>
+            <td><span class="tag tag-blue">${p.chain_count}</span></td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+init();
+</script>
+</body>
+</html>
