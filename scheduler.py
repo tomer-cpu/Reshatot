@@ -66,6 +66,13 @@ def run_fetch_job(output_dir="data", chain_filter=None):
     # Run the actual fetch
     run_fetch(chain_filter=chain_filter, output_dir=output_dir)
 
+    # Import into SQLite
+    logger.info("Importing data into SQLite...")
+    from database import Database
+    db = Database()
+    db.import_data_dir(output_dir)
+    db.close()
+
     # Verify freshness of downloaded data
     chains = get_all_chains()
     if chain_filter:
