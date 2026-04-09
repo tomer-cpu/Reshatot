@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>רשתות - דשבורד תחרות מחירים</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-bottom: 1px solid #334155;
+            padding: 1.2rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 { font-size: 1.5rem; color: #38bdf8; }
+        .header .subtitle { color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem; }
+        .header .date { color: #64748b; font-size: 0.85rem; }
+
+        .stats-bar {
+            display: flex; gap: 1.5rem; padding: 1rem 2rem;
+            background: #1e293b; border-bottom: 1px solid #334155; flex-wrap: wrap;
+        }
+        .stat-card {
+            background: #0f172a; border: 1px solid #334155;
+            border-radius: 8px; padding: 0.75rem 1.25rem; min-width: 130px; text-align: center;
+        }
+        .stat-card .value { font-size: 1.75rem; font-weight: 700; color: #38bdf8; }
+        .stat-card .label { font-size: 0.8rem; color: #94a3b8; margin-top: 0.15rem; }
+
+        .main { padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: #1e293b; border: 1px solid #334155;
+            border-radius: 12px; padding: 1.25rem;
+        }
+        .card h3 {
+            font-size: 1.1rem; color: #38bdf8; margin-bottom: 1rem;
+            border-bottom: 1px solid #334155; padding-bottom: 0.5rem;
+        }
+        .card.full { grid-column: 1 / -1; }
+
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th {
+            text-align: right; padding: 0.5rem; color: #94a3b8;
+            border-bottom: 1px solid #334155; font-weight: 600;
+        }
+        td { padding: 0.5rem; border-bottom: 1px solid #1e293b44; }
+        tr:hover td { background: #0f172a; }
+
+        .price-cheap { color: #4ade80; font-weight: 600; }
+        .price-expensive { color: #f87171; font-weight: 600; }
+        .spread-high { color: #f87171; font-weight: 600; }
+        .spread-low { color: #4ade80; font-weight: 600; }
+
+        .chart-container { position: relative; height: 320px; }
+
+        .tag {
+            display: inline-block; padding: 0.15rem 0.5rem;
+            border-radius: 4px; font-size: 0.75rem; font-weight: 600;
+        }
+        .tag-green { background: #065f46; color: #6ee7b7; }
+        .tag-red { background: #7f1d1d; color: #fca5a5; }
+        .tag-blue { background: #1e3a5f; color: #93c5fd; }
+        .tag-yellow { background: #713f12; color: #fde68a; }
+
+        .sale-badge {
+            background: #dc2626; color: white; font-size: 0.7rem;
+            padding: 0.1rem 0.4rem; border-radius: 3px; margin-right: 0.25rem;
+        }
+
+        .section-title {
+            font-size: 1.25rem; color: #e2e8f0; margin-bottom: 0.25rem;
+        }
+        .section-subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 1rem; }
+
+        .cheapest-row td { background: #065f4620; }
+        .expensive-row td { background: #7f1d1d20; }
+
+        .mini-bar {
+            height: 8px; border-radius: 4px; background: #334155;
+            overflow: hidden; margin-top: 0.25rem;
+        }
+        .mini-bar-fill { height: 100%; border-radius: 4px; }
+
+        .filter-btn {
+            display: inline-block; padding: 0.4rem 0.8rem;
+            border: 1px solid #475569; border-radius: 6px;
+            background: #0f172a; color: #94a3b8; cursor: pointer;
+            font-size: 0.85rem; margin: 0.25rem;
+            transition: all 0.15s;
+        }
+        .filter-btn:hover, .filter-btn.active {
+            border-color: #38bdf8; color: #38bdf8; background: #1e3a5f;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div>
+        <h1>רשתות - דשבורד תחרות מחירים</h1>
+        <div class="subtitle">שקיפות מחירים | חוק קידום התחרות בענף המזון</div>
+    </div>
+    <div class="date">עדכון אחרון: 09/04/2026</div>
+</div>
+
+<div class="stats-bar">
+    <div class="stat-card"><div class="value">10</div><div class="label">רשתות</div></div>
+    <div class="stat-card"><div class="value">12</div><div class="label">מוצרים</div></div>
+    <div class="stat-card"><div class="value">47</div><div class="label">סניפים</div></div>
+    <div class="stat-card"><div class="value">5</div><div class="label">ערים</div></div>
+    <div class="stat-card"><div class="value">59</div><div class="label">רשומות מחיר</div></div>
+</div>
+
+<div class="main">
+
+    <!-- Price Index by Chain -->
+    <div class="grid">
+        <div class="card">
+            <h3>מדד מחירים לפי רשת (100 = ממוצע)</h3>
+            <div class="chart-container">
+                <canvas id="chain-index-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>מחיר ממוצע לסל מוצרים בסיסי</h3>
+            <div class="chart-container">
+                <canvas id="basket-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Spreads -->
+    <div class="card">
+        <h3>מוצרים עם פערי המחיר הגדולים ביותר</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>מוצר</th>
+                    <th>מחיר ממוצע</th>
+                    <th>הכי זול</th>
+                    <th>רשת זולה</th>
+                    <th>הכי יקר</th>
+                    <th>רשת יקרה</th>
+                    <th>פער</th>
+                </tr>
+            </thead>
+            <tbody id="spreads-table"></tbody>
+        </table>
+    </div>
+
+    <!-- City Filter -->
+    <div>
+        <div class="section-title">תחרות לפי עיר</div>
+        <div class="section-subtitle">בחר עיר להשוואת מחירים אזורית</div>
+        <div id="city-buttons"></div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3 id="city-chart-title">השוואת מחירים לפי עיר</h3>
+            <div class="chart-container">
+                <canvas id="city-chart"></canvas>
+            </div>
+        </div>
+        <div class="card">
+            <h3 id="city-table-title">פירוט מחירים</h3>
+            <div id="city-table-container">
+                <table>
+                    <thead><tr><th>מוצר</th><th>רשת זולה</th><th>מחיר</th><th>רשת יקרה</th><th>מחיר</th><th>פער %</th></tr></thead>
+                    <tbody id="city-table"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Per-Product Detail -->
+    <div class="card">
+        <h3>השוואת מחירים לפי מוצר</h3>
+        <div id="product-buttons" style="margin-bottom:1rem;"></div>
+        <div class="chart-container">
+            <canvas id="product-chart"></canvas>
+        </div>
+    </div>
+
+    <!-- Promotions -->
+    <div class="card">
+        <h3>מבצעים פעילים</h3>
+        <table>
+            <thead><tr><th>מוצר</th><th>רשת</th><th>עיר</th><th>מחיר רגיל</th><th>מחיר מבצע</th><th>הנחה</th></tr></thead>
+            <tbody id="promos-table"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// EMBEDDED DATA
+// ══════════════════════════════════════════
+
+const CHAINS = [
+    { name: "קופיקס", index: 88.4, color: "#22c55e" },
+    { name: "רמי לוי", index: 91.5, color: "#4ade80" },
+    { name: "אושר עד", index: 93.2, color: "#86efac" },
+    { name: "מחסני השוק", index: 94.6, color: "#a7f3d0" },
+    { name: "ויקטורי", index: 96.1, color: "#fde68a" },
+    { name: "חצי חינם", index: 97.9, color: "#fbbf24" },
+    { name: "יוחננוף", index: 98.7, color: "#fb923c" },
+    { name: "שופרסל", index: 102.3, color: "#f87171" },
+    { name: "טיב טעם", index: 105.8, color: "#ef4444" },
+    { name: "סופר פארם", index: 108.2, color: "#dc2626" },
+];
+
+const PRODUCTS = [
+    {
+        name: "חלב תנובה 3%",
+        code: "7290000001",
+        prices: [
+            { chain: "רמי לוי", price: 5.50, city: "תל אביב" },
+            { chain: "אושר עד", price: 5.70, city: "באר שבע" },
+            { chain: "מחסני השוק", price: 5.80, city: "ירושלים" },
+            { chain: "שופרסל", price: 6.50, city: "תל אביב" },
+            { chain: "שופרסל", price: 6.50, city: "חיפה" },
+            { chain: "יוחננוף", price: 6.30, city: "נתניה" },
+            { chain: "טיב טעם", price: 7.30, city: "תל אביב" },
+        ]
+    },
+    {
+        name: "קוקה קולה 1.5 ליטר",
+        code: "7290000002",
+        prices: [
+            { chain: "קופיקס", price: 4.90, city: "תל אביב" },
+            { chain: "רמי לוי", price: 5.20, city: "ירושלים" },
+            { chain: "אושר עד", price: 5.50, city: "באר שבע" },
+            { chain: "שופרסל", price: 6.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 6.90, city: "חיפה" },
+            { chain: "ויקטורי", price: 6.50, city: "נתניה" },
+        ]
+    },
+    {
+        name: "במבה אסם 80 גרם",
+        code: "7290000003",
+        prices: [
+            { chain: "רמי לוי", price: 3.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 4.10, city: "באר שבע" },
+            { chain: "מחסני השוק", price: 4.00, city: "ירושלים" },
+            { chain: "שופרסל", price: 5.20, city: "חיפה" },
+            { chain: "טיב טעם", price: 5.50, city: "תל אביב" },
+            { chain: "חצי חינם", price: 4.50, city: "נתניה" },
+        ]
+    },
+    {
+        name: "לחם אחיד פרוס",
+        code: "7290000004",
+        prices: [
+            { chain: "רמי לוי", price: 5.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 5.90, city: "ירושלים" },
+            { chain: "אושר עד", price: 5.90, city: "באר שבע" },
+            { chain: "ויקטורי", price: 5.90, city: "חיפה" },
+            { chain: "יוחננוף", price: 5.90, city: "נתניה" },
+        ]
+    },
+    {
+        name: "ביצים L תבנית 12",
+        code: "7290000005",
+        prices: [
+            { chain: "רמי לוי", price: 13.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 14.50, city: "באר שבע" },
+            { chain: "שופרסל", price: 16.90, city: "חיפה" },
+            { chain: "טיב טעם", price: 17.50, city: "ירושלים" },
+            { chain: "מחסני השוק", price: 14.90, city: "תל אביב" },
+        ]
+    },
+    {
+        name: "שמן קנולה 1 ליטר",
+        code: "7290000006",
+        prices: [
+            { chain: "קופיקס", price: 8.90, city: "תל אביב" },
+            { chain: "רמי לוי", price: 9.50, city: "ירושלים" },
+            { chain: "שופרסל", price: 12.90, city: "חיפה" },
+            { chain: "ויקטורי", price: 11.50, city: "נתניה" },
+            { chain: "סופר פארם", price: 14.90, city: "תל אביב" },
+        ]
+    },
+    {
+        name: "גבינה צהובה 28% 200 גרם",
+        code: "7290000007",
+        prices: [
+            { chain: "רמי לוי", price: 8.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 9.20, city: "באר שבע" },
+            { chain: "שופרסל", price: 11.90, city: "ירושלים" },
+            { chain: "טיב טעם", price: 12.50, city: "חיפה" },
+            { chain: "חצי חינם", price: 10.50, city: "נתניה" },
+        ]
+    },
+    {
+        name: "קפה עלית נמס 200 גרם",
+        code: "7290000008",
+        prices: [
+            { chain: "רמי לוי", price: 18.90, city: "תל אביב" },
+            { chain: "קופיקס", price: 17.90, city: "ירושלים" },
+            { chain: "שופרסל", price: 24.90, city: "חיפה" },
+            { chain: "אושר עד", price: 19.90, city: "באר שבע" },
+            { chain: "סופר פארם", price: 27.90, city: "תל אביב" },
+        ]
+    },
+    {
+        name: "סוכר לבן 1 ק\"ג",
+        code: "7290000009",
+        prices: [
+            { chain: "רמי לוי", price: 4.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 5.10, city: "באר שבע" },
+            { chain: "שופרסל", price: 6.50, city: "ירושלים" },
+            { chain: "ויקטורי", price: 5.90, city: "חיפה" },
+        ]
+    },
+    {
+        name: "טונה סטארקיסט 160 גרם",
+        code: "7290000010",
+        prices: [
+            { chain: "רמי לוי", price: 6.90, city: "תל אביב" },
+            { chain: "קופיקס", price: 6.50, city: "ירושלים" },
+            { chain: "שופרסל", price: 8.90, city: "חיפה" },
+            { chain: "מחסני השוק", price: 7.50, city: "באר שבע" },
+            { chain: "סופר פארם", price: 9.90, city: "נתניה" },
+        ]
+    },
+    {
+        name: "חמאה תנובה 200 גרם",
+        code: "7290000011",
+        prices: [
+            { chain: "רמי לוי", price: 10.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 11.50, city: "באר שבע" },
+            { chain: "שופרסל", price: 13.90, city: "ירושלים" },
+            { chain: "טיב טעם", price: 14.90, city: "חיפה" },
+        ]
+    },
+    {
+        name: "אורז בסמטי 1 ק\"ג",
+        code: "7290000012",
+        prices: [
+            { chain: "רמי לוי", price: 9.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 10.50, city: "באר שבע" },
+            { chain: "מחסני השוק", price: 10.90, city: "ירושלים" },
+            { chain: "שופרסל", price: 14.90, city: "חיפה" },
+            { chain: "ויקטורי", price: 12.50, city: "נתניה" },
+        ]
+    },
+];
+
+const PROMOS = [
+    { product: "קוקה קולה 1.5 ליטר", chain: "שופרסל", city: "תל אביב", price: 6.90, promoPrice: 4.90, discount: 29 },
+    { product: "במבה אסם 80 גרם", chain: "שופרסל", city: "חיפה", price: 5.20, promoPrice: 3.50, discount: 33 },
+    { product: "קפה עלית נמס 200 גרם", chain: "שופרסל", city: "חיפה", price: 24.90, promoPrice: 17.90, discount: 28 },
+    { product: "גבינה צהובה 28% 200 גרם", chain: "טיב טעם", city: "חיפה", price: 12.50, promoPrice: 9.90, discount: 21 },
+    { product: "ביצים L תבנית 12", chain: "שופרסל", city: "חיפה", price: 16.90, promoPrice: 12.90, discount: 24 },
+    { product: "שמן קנולה 1 ליטר", chain: "סופר פארם", city: "תל אביב", price: 14.90, promoPrice: 9.90, discount: 34 },
+];
+
+const CITIES = ["תל אביב", "ירושלים", "חיפה", "באר שבע", "נתניה"];
+
+// ══════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════
+
+// Chain Price Index
+new Chart(document.getElementById('chain-index-chart'), {
+    type: 'bar',
+    data: {
+        labels: CHAINS.map(c => c.name),
+        datasets: [{
+            label: 'מדד מחירים',
+            data: CHAINS.map(c => c.index),
+            backgroundColor: CHAINS.map(c => c.color),
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                callbacks: {
+                    label: ctx => `מדד: ${ctx.raw} (${ctx.raw < 100 ? 'זול מהממוצע' : 'יקר מהממוצע'})`
+                }
+            }
+        },
+        scales: {
+            x: { ticks: { color: '#e2e8f0', maxRotation: 45 }, grid: { display: false } },
+            y: {
+                min: 80, max: 115,
+                ticks: { color: '#94a3b8' },
+                grid: { color: '#334155' },
+            }
+        }
+    }
+});
+
+// Basket Comparison
+const basketProducts = PRODUCTS.filter(p => ["7290000001","7290000003","7290000004","7290000005","7290000009"].includes(p.code));
+const basketChains = ["רמי לוי", "אושר עד", "שופרסל", "מחסני השוק", "ויקטורי"];
+const basketTotals = basketChains.map(chain => {
+    let total = 0;
+    basketProducts.forEach(p => {
+        const rec = p.prices.find(r => r.chain === chain);
+        if (rec) total += rec.price;
+    });
+    return { chain, total: Math.round(total * 100) / 100 };
+}).sort((a, b) => a.total - b.total);
+
+new Chart(document.getElementById('basket-chart'), {
+    type: 'bar',
+    data: {
+        labels: basketTotals.map(b => b.chain),
+        datasets: [{
+            label: 'סל בסיסי (₪)',
+            data: basketTotals.map(b => b.total),
+            backgroundColor: basketTotals.map((b, i) => {
+                if (i === 0) return '#4ade80';
+                if (i === basketTotals.length - 1) return '#f87171';
+                return '#38bdf8';
+            }),
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `${ctx.raw.toFixed(2)} ₪` } }
+        },
+        scales: {
+            x: { ticks: { color: '#94a3b8', callback: v => v + '₪' }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#e2e8f0' }, grid: { display: false } },
+        }
+    }
+});
+
+// ══════════════════════════════════════════
+// TOP SPREADS TABLE
+// ══════════════════════════════════════════
+
+function getProductSpread(product) {
+    const prices = product.prices.map(p => p.price);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const avg = prices.reduce((a, b) => a + b, 0) / prices.length;
+    const cheapest = product.prices.find(p => p.price === min);
+    const expensive = product.prices.find(p => p.price === max);
+    const spreadPct = Math.round(((max - min) / min) * 100);
+    return { name: product.name, code: product.code, avg, min, max, cheapest, expensive, spreadPct };
+}
+
+const spreads = PRODUCTS.map(getProductSpread).sort((a, b) => b.spreadPct - a.spreadPct);
+
+const spreadsTable = document.getElementById('spreads-table');
+spreads.forEach(s => {
+    spreadsTable.innerHTML += `<tr>
+        <td>${s.name}</td>
+        <td>${s.avg.toFixed(2)} &#8362;</td>
+        <td class="price-cheap">${s.min.toFixed(2)} &#8362;</td>
+        <td class="price-cheap">${s.cheapest.chain}</td>
+        <td class="price-expensive">${s.max.toFixed(2)} &#8362;</td>
+        <td class="price-expensive">${s.expensive.chain}</td>
+        <td class="${s.spreadPct > 20 ? 'spread-high' : 'spread-low'}">${s.spreadPct}%</td>
+    </tr>`;
+});
+
+// ══════════════════════════════════════════
+// CITY FILTER
+// ══════════════════════════════════════════
+
+let cityChart = null;
+const cityBtns = document.getElementById('city-buttons');
+CITIES.forEach((city, i) => {
+    const btn = document.createElement('span');
+    btn.className = 'filter-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = city;
+    btn.onclick = () => {
+        document.querySelectorAll('#city-buttons .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderCity(city);
+    };
+    cityBtns.appendChild(btn);
+});
+
+function renderCity(city) {
+    document.getElementById('city-chart-title').textContent = `השוואת מחירים - ${city}`;
+    document.getElementById('city-table-title').textContent = `פירוט מוצרים - ${city}`;
+
+    // Gather chains present in this city
+    const chainPrices = {};
+    PRODUCTS.forEach(p => {
+        p.prices.filter(r => r.city === city).forEach(r => {
+            if (!chainPrices[r.chain]) chainPrices[r.chain] = [];
+            chainPrices[r.chain].push(r.price);
+        });
+    });
+
+    const chainAvgs = Object.entries(chainPrices).map(([chain, prices]) => ({
+        chain,
+        avg: prices.reduce((a, b) => a + b, 0) / prices.length,
+        count: prices.length,
+    })).sort((a, b) => a.avg - b.avg);
+
+    if (cityChart) cityChart.destroy();
+    cityChart = new Chart(document.getElementById('city-chart'), {
+        type: 'bar',
+        data: {
+            labels: chainAvgs.map(c => c.chain),
+            datasets: [{
+                label: 'מחיר ממוצע (₪)',
+                data: chainAvgs.map(c => Math.round(c.avg * 100) / 100),
+                backgroundColor: chainAvgs.map((c, i) => {
+                    if (i === 0) return '#4ade80';
+                    if (i === chainAvgs.length - 1) return '#f87171';
+                    return '#38bdf8';
+                }),
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#e2e8f0' }, grid: { display: false } },
+                y: { ticks: { color: '#94a3b8', callback: v => v + '₪' }, grid: { color: '#334155' } },
+            }
+        }
+    });
+
+    // Products table for this city
+    const tbody = document.getElementById('city-table');
+    tbody.innerHTML = '';
+    PRODUCTS.forEach(p => {
+        const cityPrices = p.prices.filter(r => r.city === city);
+        if (cityPrices.length < 1) return;
+        const min = cityPrices.reduce((a, b) => a.price < b.price ? a : b);
+        const max = cityPrices.reduce((a, b) => a.price > b.price ? a : b);
+        const gap = cityPrices.length > 1 ? Math.round(((max.price - min.price) / min.price) * 100) : 0;
+        tbody.innerHTML += `<tr>
+            <td>${p.name}</td>
+            <td class="price-cheap">${min.chain}</td>
+            <td class="price-cheap">${min.price.toFixed(2)} &#8362;</td>
+            <td class="price-expensive">${max.chain}</td>
+            <td class="price-expensive">${max.price.toFixed(2)} &#8362;</td>
+            <td class="${gap > 20 ? 'spread-high' : 'spread-low'}">${gap}%</td>
+        </tr>`;
+    });
+}
+renderCity("תל אביב");
+
+// ══════════════════════════════════════════
+// PRODUCT COMPARISON
+// ══════════════════════════════════════════
+
+let productChart = null;
+const prodBtns = document.getElementById('product-buttons');
+PRODUCTS.forEach((p, i) => {
+    const btn = document.createElement('span');
+    btn.className = 'filter-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = p.name;
+    btn.onclick = () => {
+        document.querySelectorAll('#product-buttons .filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderProduct(p);
+    };
+    prodBtns.appendChild(btn);
+});
+
+function renderProduct(product) {
+    // Aggregate prices by chain (avg across cities)
+    const chainMap = {};
+    product.prices.forEach(r => {
+        if (!chainMap[r.chain]) chainMap[r.chain] = [];
+        chainMap[r.chain].push(r.price);
+    });
+    const chainAvgs = Object.entries(chainMap).map(([chain, prices]) => ({
+        chain,
+        avg: prices.reduce((a, b) => a + b, 0) / prices.length,
+    })).sort((a, b) => a.avg - b.avg);
+
+    if (productChart) productChart.destroy();
+    productChart = new Chart(document.getElementById('product-chart'), {
+        type: 'bar',
+        data: {
+            labels: chainAvgs.map(c => c.chain),
+            datasets: [{
+                label: product.name + ' (₪)',
+                data: chainAvgs.map(c => Math.round(c.avg * 100) / 100),
+                backgroundColor: chainAvgs.map((c, i) => {
+                    if (i === 0) return '#4ade80';
+                    if (i === chainAvgs.length - 1) return '#f87171';
+                    return '#38bdf8';
+                }),
+                borderRadius: 6,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                x: { ticks: { color: '#94a3b8', callback: v => v + '₪' }, grid: { color: '#334155' } },
+                y: { ticks: { color: '#e2e8f0' }, grid: { display: false } },
+            }
+        }
+    });
+}
+renderProduct(PRODUCTS[0]);
+
+// ══════════════════════════════════════════
+// PROMOTIONS
+// ══════════════════════════════════════════
+
+const promosTable = document.getElementById('promos-table');
+PROMOS.forEach(p => {
+    promosTable.innerHTML += `<tr>
+        <td>${p.product}</td>
+        <td>${p.chain}</td>
+        <td>${p.city}</td>
+        <td style="text-decoration:line-through;color:#64748b">${p.price.toFixed(2)} &#8362;</td>
+        <td class="price-cheap">${p.promoPrice.toFixed(2)} &#8362;</td>
+        <td><span class="sale-badge">-${p.discount}%</span></td>
+    </tr>`;
+});
+</script>
+</body>
+</html>
