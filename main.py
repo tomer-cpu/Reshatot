@@ -89,6 +89,37 @@ def print_chains_table():
     print()
 
 
+def run_verify(chain_filter=None, output_dir="data"):
+    """Verify freshness of downloaded files."""
+    from datetime import date
+    chains = get_all_chains()
+    if chain_filter:
+        filter_lower = chain_filter.lower()
+        chains = [
+            c for c in chains
+            if filter_lower in c["name"].lower() or filter_lower in c.get("name_he", "")
+        ]
+
+    print(f"\n{'='*60}")
+    print(f"  Freshness Report - {date.today()}")
+    print(f"{'='*60}")
+    print(f"  {'Chain':<30} {'Status':<10} {'Fresh':<8} {'Stale':<8} {'Total':<8}")
+    print(f"  {'-'*30} {'-'*10} {'-'*8} {'-'*8} {'-'*8}")
+
+    for chain_config in chains:
+        scraper = create_scraper(chain_config, output_dir)
+        if not scraper:
+            continue
+        result = scraper.verify_freshness()
+        icon = "V" if result["status"] == "fresh" else "X" if result["status"] == "stale" else "-"
+        print(
+            f"  {result['chain']:<30} {icon:<10} "
+            f"{result.get('fresh', 0):<8} {result.get('stale', 0):<8} "
+            f"{result['total_files']:<8}"
+        )
+    print()
+
+
 def run_fetch(chain_filter=None, output_dir="data", list_only=False):
     """Fetch (or list) price data from chains."""
     chains = get_all_chains()
@@ -170,6 +201,10 @@ Examples:
         help="List available files without downloading",
     )
     parser.add_argument(
+        "--verify", action="store_true",
+        help="Verify freshness of already-downloaded files",
+    )
+    parser.add_argument(
         "--chain", type=str, default=None,
         help="Filter by chain name (partial match, case-insensitive)",
     )
@@ -180,7 +215,9 @@ Examples:
 
     args = parser.parse_args()
 
-    if args.fetch or args.list_files:
+    if args.verify:
+        run_verify(chain_filter=args.chain, output_dir=args.output)
+    elif args.fetch or args.list_files:
         run_fetch(
             chain_filter=args.chain,
             output_dir=args.output,
