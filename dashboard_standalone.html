@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>רשתות - דשבורד תחרות מחירים</title>
+    <title>רשתות - מוצרי ליימן שלייסל</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,6 +24,19 @@
         .header h1 { font-size: 1.5rem; color: #38bdf8; }
         .header .subtitle { color: #94a3b8; font-size: 0.9rem; margin-top: 0.25rem; }
         .header .date { color: #64748b; font-size: 0.85rem; }
+
+        .manufacturer-banner {
+            background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+            border-bottom: 2px solid #38bdf8;
+            padding: 0.75rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        .manufacturer-banner .mfr-name {
+            font-size: 1.2rem; font-weight: 700; color: #93c5fd;
+        }
+        .manufacturer-banner .mfr-info { color: #94a3b8; font-size: 0.85rem; }
 
         .stats-bar {
             display: flex; gap: 1.5rem; padding: 1rem 2rem;
@@ -73,33 +86,20 @@
         .tag-green { background: #065f46; color: #6ee7b7; }
         .tag-red { background: #7f1d1d; color: #fca5a5; }
         .tag-blue { background: #1e3a5f; color: #93c5fd; }
-        .tag-yellow { background: #713f12; color: #fde68a; }
 
         .sale-badge {
             background: #dc2626; color: white; font-size: 0.7rem;
             padding: 0.1rem 0.4rem; border-radius: 3px; margin-right: 0.25rem;
         }
 
-        .section-title {
-            font-size: 1.25rem; color: #e2e8f0; margin-bottom: 0.25rem;
-        }
+        .section-title { font-size: 1.25rem; color: #e2e8f0; margin-bottom: 0.25rem; }
         .section-subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 1rem; }
-
-        .cheapest-row td { background: #065f4620; }
-        .expensive-row td { background: #7f1d1d20; }
-
-        .mini-bar {
-            height: 8px; border-radius: 4px; background: #334155;
-            overflow: hidden; margin-top: 0.25rem;
-        }
-        .mini-bar-fill { height: 100%; border-radius: 4px; }
 
         .filter-btn {
             display: inline-block; padding: 0.4rem 0.8rem;
             border: 1px solid #475569; border-radius: 6px;
             background: #0f172a; color: #94a3b8; cursor: pointer;
-            font-size: 0.85rem; margin: 0.25rem;
-            transition: all 0.15s;
+            font-size: 0.85rem; margin: 0.25rem; transition: all 0.15s;
         }
         .filter-btn:hover, .filter-btn.active {
             border-color: #38bdf8; color: #38bdf8; background: #1e3a5f;
@@ -116,40 +116,38 @@
     <div class="date">עדכון אחרון: 09/04/2026</div>
 </div>
 
-<div class="stats-bar">
-    <div class="stat-card"><div class="value">10</div><div class="label">רשתות</div></div>
-    <div class="stat-card"><div class="value">12</div><div class="label">מוצרים</div></div>
-    <div class="stat-card"><div class="value">47</div><div class="label">סניפים</div></div>
-    <div class="stat-card"><div class="value">5</div><div class="label">ערים</div></div>
-    <div class="stat-card"><div class="value">59</div><div class="label">רשומות מחיר</div></div>
+<div class="manufacturer-banner">
+    <div class="mfr-name">ליימן שלייסל</div>
+    <div class="mfr-info">יבואן ומשווק מזון | מציג אך ורק מוצרי ליימן שלייסל</div>
 </div>
+
+<div class="stats-bar" id="stats-bar"></div>
 
 <div class="main">
 
-    <!-- Price Index by Chain -->
     <div class="grid">
         <div class="card">
-            <h3>מדד מחירים לפי רשת (100 = ממוצע)</h3>
+            <h3>מחיר ממוצע לפי מוצר - כל הרשתות</h3>
             <div class="chart-container">
-                <canvas id="chain-index-chart"></canvas>
+                <canvas id="product-avg-chart"></canvas>
             </div>
         </div>
-
         <div class="card">
-            <h3>מחיר ממוצע לסל מוצרים בסיסי</h3>
+            <h3>פערי מחיר (%) - זול מול יקר</h3>
             <div class="chart-container">
-                <canvas id="basket-chart"></canvas>
+                <canvas id="spread-chart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Top Spreads -->
+    <!-- Top Spreads Table -->
     <div class="card">
-        <h3>מוצרים עם פערי המחיר הגדולים ביותר</h3>
+        <h3>מוצרי ליימן שלייסל - השוואת מחירים בין רשתות</h3>
         <table>
             <thead>
                 <tr>
                     <th>מוצר</th>
+                    <th>ברקוד</th>
                     <th>מחיר ממוצע</th>
                     <th>הכי זול</th>
                     <th>רשת זולה</th>
@@ -164,7 +162,7 @@
 
     <!-- City Filter -->
     <div>
-        <div class="section-title">תחרות לפי עיר</div>
+        <div class="section-title">תחרות לפי עיר - מוצרי ליימן שלייסל</div>
         <div class="section-subtitle">בחר עיר להשוואת מחירים אזורית</div>
         <div id="city-buttons"></div>
     </div>
@@ -177,7 +175,7 @@
             </div>
         </div>
         <div class="card">
-            <h3 id="city-table-title">פירוט מחירים</h3>
+            <h3 id="city-table-title">פירוט מוצרים</h3>
             <div id="city-table-container">
                 <table>
                     <thead><tr><th>מוצר</th><th>רשת זולה</th><th>מחיר</th><th>רשת יקרה</th><th>מחיר</th><th>פער %</th></tr></thead>
@@ -198,7 +196,7 @@
 
     <!-- Promotions -->
     <div class="card">
-        <h3>מבצעים פעילים</h3>
+        <h3>מבצעים פעילים - מוצרי ליימן שלייסל</h3>
         <table>
             <thead><tr><th>מוצר</th><th>רשת</th><th>עיר</th><th>מחיר רגיל</th><th>מחיר מבצע</th><th>הנחה</th></tr></thead>
             <tbody id="promos-table"></tbody>
@@ -209,149 +207,89 @@
 
 <script>
 // ══════════════════════════════════════════
-// EMBEDDED DATA
+// EMBEDDED DATA - מוצרי ליימן שלייסל בלבד
 // ══════════════════════════════════════════
-
-const CHAINS = [
-    { name: "קופיקס", index: 88.4, color: "#22c55e" },
-    { name: "רמי לוי", index: 91.5, color: "#4ade80" },
-    { name: "אושר עד", index: 93.2, color: "#86efac" },
-    { name: "מחסני השוק", index: 94.6, color: "#a7f3d0" },
-    { name: "ויקטורי", index: 96.1, color: "#fde68a" },
-    { name: "חצי חינם", index: 97.9, color: "#fbbf24" },
-    { name: "יוחננוף", index: 98.7, color: "#fb923c" },
-    { name: "שופרסל", index: 102.3, color: "#f87171" },
-    { name: "טיב טעם", index: 105.8, color: "#ef4444" },
-    { name: "סופר פארם", index: 108.2, color: "#dc2626" },
-];
 
 const PRODUCTS = [
     {
-        name: "חלב תנובה 3%",
-        code: "7290000001",
-        prices: [
-            { chain: "רמי לוי", price: 5.50, city: "תל אביב" },
-            { chain: "אושר עד", price: 5.70, city: "באר שבע" },
-            { chain: "מחסני השוק", price: 5.80, city: "ירושלים" },
-            { chain: "שופרסל", price: 6.50, city: "תל אביב" },
-            { chain: "שופרסל", price: 6.50, city: "חיפה" },
-            { chain: "יוחננוף", price: 6.30, city: "נתניה" },
-            { chain: "טיב טעם", price: 7.30, city: "תל אביב" },
-        ]
-    },
-    {
-        name: "קוקה קולה 1.5 ליטר",
-        code: "7290000002",
-        prices: [
-            { chain: "קופיקס", price: 4.90, city: "תל אביב" },
-            { chain: "רמי לוי", price: 5.20, city: "ירושלים" },
-            { chain: "אושר עד", price: 5.50, city: "באר שבע" },
-            { chain: "שופרסל", price: 6.90, city: "תל אביב" },
-            { chain: "שופרסל", price: 6.90, city: "חיפה" },
-            { chain: "ויקטורי", price: 6.50, city: "נתניה" },
-        ]
-    },
-    {
-        name: "במבה אסם 80 גרם",
-        code: "7290000003",
-        prices: [
-            { chain: "רמי לוי", price: 3.90, city: "תל אביב" },
-            { chain: "אושר עד", price: 4.10, city: "באר שבע" },
-            { chain: "מחסני השוק", price: 4.00, city: "ירושלים" },
-            { chain: "שופרסל", price: 5.20, city: "חיפה" },
-            { chain: "טיב טעם", price: 5.50, city: "תל אביב" },
-            { chain: "חצי חינם", price: 4.50, city: "נתניה" },
-        ]
-    },
-    {
-        name: "לחם אחיד פרוס",
-        code: "7290000004",
-        prices: [
-            { chain: "רמי לוי", price: 5.90, city: "תל אביב" },
-            { chain: "שופרסל", price: 5.90, city: "ירושלים" },
-            { chain: "אושר עד", price: 5.90, city: "באר שבע" },
-            { chain: "ויקטורי", price: 5.90, city: "חיפה" },
-            { chain: "יוחננוף", price: 5.90, city: "נתניה" },
-        ]
-    },
-    {
-        name: "ביצים L תבנית 12",
-        code: "7290000005",
-        prices: [
-            { chain: "רמי לוי", price: 13.90, city: "תל אביב" },
-            { chain: "אושר עד", price: 14.50, city: "באר שבע" },
-            { chain: "שופרסל", price: 16.90, city: "חיפה" },
-            { chain: "טיב טעם", price: 17.50, city: "ירושלים" },
-            { chain: "מחסני השוק", price: 14.90, city: "תל אביב" },
-        ]
-    },
-    {
-        name: "שמן קנולה 1 ליטר",
-        code: "7290000006",
-        prices: [
-            { chain: "קופיקס", price: 8.90, city: "תל אביב" },
-            { chain: "רמי לוי", price: 9.50, city: "ירושלים" },
-            { chain: "שופרסל", price: 12.90, city: "חיפה" },
-            { chain: "ויקטורי", price: 11.50, city: "נתניה" },
-            { chain: "סופר פארם", price: 14.90, city: "תל אביב" },
-        ]
-    },
-    {
-        name: "גבינה צהובה 28% 200 גרם",
-        code: "7290000007",
-        prices: [
-            { chain: "רמי לוי", price: 8.90, city: "תל אביב" },
-            { chain: "אושר עד", price: 9.20, city: "באר שבע" },
-            { chain: "שופרסל", price: 11.90, city: "ירושלים" },
-            { chain: "טיב טעם", price: 12.50, city: "חיפה" },
-            { chain: "חצי חינם", price: 10.50, city: "נתניה" },
-        ]
-    },
-    {
-        name: "קפה עלית נמס 200 גרם",
-        code: "7290000008",
-        prices: [
-            { chain: "רמי לוי", price: 18.90, city: "תל אביב" },
-            { chain: "קופיקס", price: 17.90, city: "ירושלים" },
-            { chain: "שופרסל", price: 24.90, city: "חיפה" },
-            { chain: "אושר עד", price: 19.90, city: "באר שבע" },
-            { chain: "סופר פארם", price: 27.90, city: "תל אביב" },
-        ]
-    },
-    {
-        name: "סוכר לבן 1 ק\"ג",
-        code: "7290000009",
-        prices: [
-            { chain: "רמי לוי", price: 4.90, city: "תל אביב" },
-            { chain: "אושר עד", price: 5.10, city: "באר שבע" },
-            { chain: "שופרסל", price: 6.50, city: "ירושלים" },
-            { chain: "ויקטורי", price: 5.90, city: "חיפה" },
-        ]
-    },
-    {
-        name: "טונה סטארקיסט 160 גרם",
-        code: "7290000010",
+        name: "טונה סטארקיסט בשמן 160 גרם",
+        code: "7290004131810",
+        brand: "סטארקיסט",
         prices: [
             { chain: "רמי לוי", price: 6.90, city: "תל אביב" },
             { chain: "קופיקס", price: 6.50, city: "ירושלים" },
             { chain: "שופרסל", price: 8.90, city: "חיפה" },
             { chain: "מחסני השוק", price: 7.50, city: "באר שבע" },
             { chain: "סופר פארם", price: 9.90, city: "נתניה" },
+            { chain: "אושר עד", price: 7.20, city: "תל אביב" },
+            { chain: "ויקטורי", price: 8.50, city: "ירושלים" },
         ]
     },
     {
-        name: "חמאה תנובה 200 גרם",
-        code: "7290000011",
+        name: "טונה סטארקיסט במים 160 גרם",
+        code: "7290004131827",
+        brand: "סטארקיסט",
         prices: [
-            { chain: "רמי לוי", price: 10.90, city: "תל אביב" },
-            { chain: "אושר עד", price: 11.50, city: "באר שבע" },
-            { chain: "שופרסל", price: 13.90, city: "ירושלים" },
-            { chain: "טיב טעם", price: 14.90, city: "חיפה" },
+            { chain: "רמי לוי", price: 6.50, city: "תל אביב" },
+            { chain: "קופיקס", price: 6.20, city: "ירושלים" },
+            { chain: "שופרסל", price: 8.50, city: "חיפה" },
+            { chain: "אושר עד", price: 6.90, city: "באר שבע" },
+            { chain: "ויקטורי", price: 8.20, city: "נתניה" },
         ]
     },
     {
-        name: "אורז בסמטי 1 ק\"ג",
-        code: "7290000012",
+        name: "טונה סטארקיסט לייט 160 גרם",
+        code: "7290004131834",
+        brand: "סטארקיסט",
+        prices: [
+            { chain: "רמי לוי", price: 7.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 9.90, city: "ירושלים" },
+            { chain: "אושר עד", price: 8.20, city: "באר שבע" },
+            { chain: "מחסני השוק", price: 8.50, city: "חיפה" },
+            { chain: "טיב טעם", price: 10.90, city: "נתניה" },
+        ]
+    },
+    {
+        name: "פסטה ברילה ספגטי 500 גרם",
+        code: "8076800195057",
+        brand: "ברילה",
+        prices: [
+            { chain: "רמי לוי", price: 7.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 10.90, city: "ירושלים" },
+            { chain: "אושר עד", price: 8.50, city: "באר שבע" },
+            { chain: "ויקטורי", price: 9.90, city: "חיפה" },
+            { chain: "יוחננוף", price: 9.50, city: "נתניה" },
+            { chain: "טיב טעם", price: 11.50, city: "תל אביב" },
+        ]
+    },
+    {
+        name: "פסטה ברילה פנה 500 גרם",
+        code: "8076800195064",
+        brand: "ברילה",
+        prices: [
+            { chain: "רמי לוי", price: 7.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 10.90, city: "חיפה" },
+            { chain: "אושר עד", price: 8.50, city: "באר שבע" },
+            { chain: "מחסני השוק", price: 8.90, city: "ירושלים" },
+            { chain: "חצי חינם", price: 9.20, city: "נתניה" },
+        ]
+    },
+    {
+        name: "רוטב פסטה ברילה עגבניות 400 גרם",
+        code: "8076809521437",
+        brand: "ברילה",
+        prices: [
+            { chain: "רמי לוי", price: 12.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 16.90, city: "ירושלים" },
+            { chain: "אושר עד", price: 13.50, city: "באר שבע" },
+            { chain: "ויקטורי", price: 15.90, city: "חיפה" },
+            { chain: "סופר פארם", price: 18.90, city: "נתניה" },
+        ]
+    },
+    {
+        name: "אורז בסמטי ליימן 1 ק\"ג",
+        code: "7290004130011",
+        brand: "ליימן",
         prices: [
             { chain: "רמי לוי", price: 9.90, city: "תל אביב" },
             { chain: "אושר עד", price: 10.50, city: "באר שבע" },
@@ -360,101 +298,106 @@ const PRODUCTS = [
             { chain: "ויקטורי", price: 12.50, city: "נתניה" },
         ]
     },
+    {
+        name: "שמן זית ליימן 750 מ\"ל",
+        code: "7290004130028",
+        brand: "ליימן",
+        prices: [
+            { chain: "רמי לוי", price: 24.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 26.50, city: "באר שבע" },
+            { chain: "שופרסל", price: 32.90, city: "ירושלים" },
+            { chain: "ויקטורי", price: 29.90, city: "חיפה" },
+            { chain: "טיב טעם", price: 34.90, city: "נתניה" },
+        ]
+    },
+    {
+        name: "קמח ליימן רגיל 1 ק\"ג",
+        code: "7290004130035",
+        brand: "ליימן",
+        prices: [
+            { chain: "רמי לוי", price: 4.50, city: "תל אביב" },
+            { chain: "אושר עד", price: 4.90, city: "באר שבע" },
+            { chain: "שופרסל", price: 5.90, city: "ירושלים" },
+            { chain: "מחסני השוק", price: 5.20, city: "חיפה" },
+            { chain: "חצי חינם", price: 5.50, city: "נתניה" },
+        ]
+    },
+    {
+        name: "סוכר לבן ליימן 1 ק\"ג",
+        code: "7290004130042",
+        brand: "ליימן",
+        prices: [
+            { chain: "רמי לוי", price: 4.90, city: "תל אביב" },
+            { chain: "אושר עד", price: 5.10, city: "באר שבע" },
+            { chain: "שופרסל", price: 6.50, city: "ירושלים" },
+            { chain: "ויקטורי", price: 5.90, city: "חיפה" },
+            { chain: "קופיקס", price: 4.70, city: "נתניה" },
+        ]
+    },
+    {
+        name: "שימורי תירס ליימן 400 גרם",
+        code: "7290004130059",
+        brand: "ליימן",
+        prices: [
+            { chain: "רמי לוי", price: 5.90, city: "תל אביב" },
+            { chain: "שופרסל", price: 7.90, city: "ירושלים" },
+            { chain: "אושר עד", price: 6.20, city: "באר שבע" },
+            { chain: "מחסני השוק", price: 6.50, city: "חיפה" },
+            { chain: "טיב טעם", price: 8.50, city: "נתניה" },
+        ]
+    },
+    {
+        name: "עגבניות מרוסקות ליימן 400 גרם",
+        code: "7290004130066",
+        brand: "ליימן",
+        prices: [
+            { chain: "רמי לוי", price: 4.20, city: "תל אביב" },
+            { chain: "אושר עד", price: 4.50, city: "באר שבע" },
+            { chain: "שופרסל", price: 5.90, city: "חיפה" },
+            { chain: "ויקטורי", price: 5.50, city: "ירושלים" },
+            { chain: "קופיקס", price: 3.90, city: "נתניה" },
+        ]
+    },
 ];
 
 const PROMOS = [
-    { product: "קוקה קולה 1.5 ליטר", chain: "שופרסל", city: "תל אביב", price: 6.90, promoPrice: 4.90, discount: 29 },
-    { product: "במבה אסם 80 גרם", chain: "שופרסל", city: "חיפה", price: 5.20, promoPrice: 3.50, discount: 33 },
-    { product: "קפה עלית נמס 200 גרם", chain: "שופרסל", city: "חיפה", price: 24.90, promoPrice: 17.90, discount: 28 },
-    { product: "גבינה צהובה 28% 200 גרם", chain: "טיב טעם", city: "חיפה", price: 12.50, promoPrice: 9.90, discount: 21 },
-    { product: "ביצים L תבנית 12", chain: "שופרסל", city: "חיפה", price: 16.90, promoPrice: 12.90, discount: 24 },
-    { product: "שמן קנולה 1 ליטר", chain: "סופר פארם", city: "תל אביב", price: 14.90, promoPrice: 9.90, discount: 34 },
+    { product: "טונה סטארקיסט בשמן 160 גרם", chain: "שופרסל", city: "חיפה", price: 8.90, promoPrice: 5.90, discount: 34 },
+    { product: "פסטה ברילה ספגטי 500 גרם", chain: "שופרסל", city: "ירושלים", price: 10.90, promoPrice: 6.90, discount: 37 },
+    { product: "רוטב פסטה ברילה עגבניות 400 גרם", chain: "סופר פארם", city: "נתניה", price: 18.90, promoPrice: 12.90, discount: 32 },
+    { product: "אורז בסמטי ליימן 1 ק\"ג", chain: "שופרסל", city: "חיפה", price: 14.90, promoPrice: 9.90, discount: 34 },
+    { product: "שמן זית ליימן 750 מ\"ל", chain: "רמי לוי", city: "תל אביב", price: 24.90, promoPrice: 19.90, discount: 20 },
+    { product: "שימורי תירס ליימן 400 גרם", chain: "אושר עד", city: "באר שבע", price: 6.20, promoPrice: 4.50, discount: 27 },
+    { product: "טונה סטארקיסט לייט 160 גרם", chain: "רמי לוי", city: "תל אביב", price: 7.90, promoPrice: 5.90, discount: 25 },
 ];
 
 const CITIES = ["תל אביב", "ירושלים", "חיפה", "באר שבע", "נתניה"];
 
 // ══════════════════════════════════════════
-// CHARTS
+// STATS BAR
 // ══════════════════════════════════════════
 
-// Chain Price Index
-new Chart(document.getElementById('chain-index-chart'), {
-    type: 'bar',
-    data: {
-        labels: CHAINS.map(c => c.name),
-        datasets: [{
-            label: 'מדד מחירים',
-            data: CHAINS.map(c => c.index),
-            backgroundColor: CHAINS.map(c => c.color),
-            borderRadius: 6,
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: {
-                callbacks: {
-                    label: ctx => `מדד: ${ctx.raw} (${ctx.raw < 100 ? 'זול מהממוצע' : 'יקר מהממוצע'})`
-                }
-            }
-        },
-        scales: {
-            x: { ticks: { color: '#e2e8f0', maxRotation: 45 }, grid: { display: false } },
-            y: {
-                min: 80, max: 115,
-                ticks: { color: '#94a3b8' },
-                grid: { color: '#334155' },
-            }
-        }
-    }
-});
+const allChains = new Set();
+const allCities = new Set();
+let totalRecords = 0;
+PRODUCTS.forEach(p => p.prices.forEach(r => {
+    allChains.add(r.chain);
+    allCities.add(r.city);
+    totalRecords++;
+}));
 
-// Basket Comparison
-const basketProducts = PRODUCTS.filter(p => ["7290000001","7290000003","7290000004","7290000005","7290000009"].includes(p.code));
-const basketChains = ["רמי לוי", "אושר עד", "שופרסל", "מחסני השוק", "ויקטורי"];
-const basketTotals = basketChains.map(chain => {
-    let total = 0;
-    basketProducts.forEach(p => {
-        const rec = p.prices.find(r => r.chain === chain);
-        if (rec) total += rec.price;
-    });
-    return { chain, total: Math.round(total * 100) / 100 };
-}).sort((a, b) => a.total - b.total);
-
-new Chart(document.getElementById('basket-chart'), {
-    type: 'bar',
-    data: {
-        labels: basketTotals.map(b => b.chain),
-        datasets: [{
-            label: 'סל בסיסי (₪)',
-            data: basketTotals.map(b => b.total),
-            backgroundColor: basketTotals.map((b, i) => {
-                if (i === 0) return '#4ade80';
-                if (i === basketTotals.length - 1) return '#f87171';
-                return '#38bdf8';
-            }),
-            borderRadius: 6,
-        }]
-    },
-    options: {
-        indexAxis: 'y',
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => `${ctx.raw.toFixed(2)} ₪` } }
-        },
-        scales: {
-            x: { ticks: { color: '#94a3b8', callback: v => v + '₪' }, grid: { color: '#334155' } },
-            y: { ticks: { color: '#e2e8f0' }, grid: { display: false } },
-        }
-    }
+const statsBar = document.getElementById('stats-bar');
+[
+    { value: PRODUCTS.length, label: "מוצרים" },
+    { value: allChains.size, label: "רשתות" },
+    { value: allCities.size, label: "ערים" },
+    { value: totalRecords, label: "רשומות מחיר" },
+    { value: PROMOS.length, label: "מבצעים" },
+].forEach(s => {
+    statsBar.innerHTML += `<div class="stat-card"><div class="value">${s.value}</div><div class="label">${s.label}</div></div>`;
 });
 
 // ══════════════════════════════════════════
-// TOP SPREADS TABLE
+// HELPER
 // ══════════════════════════════════════════
 
 function getProductSpread(product) {
@@ -465,21 +408,97 @@ function getProductSpread(product) {
     const cheapest = product.prices.find(p => p.price === min);
     const expensive = product.prices.find(p => p.price === max);
     const spreadPct = Math.round(((max - min) / min) * 100);
-    return { name: product.name, code: product.code, avg, min, max, cheapest, expensive, spreadPct };
+    return { name: product.name, code: product.code, brand: product.brand, avg, min, max, cheapest, expensive, spreadPct };
 }
 
 const spreads = PRODUCTS.map(getProductSpread).sort((a, b) => b.spreadPct - a.spreadPct);
 
+// ══════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════
+
+// Product avg prices
+new Chart(document.getElementById('product-avg-chart'), {
+    type: 'bar',
+    data: {
+        labels: spreads.map(s => s.name.length > 22 ? s.name.slice(0,20) + '...' : s.name),
+        datasets: [
+            {
+                label: 'מינימום',
+                data: spreads.map(s => s.min),
+                backgroundColor: '#4ade80',
+                borderRadius: 4,
+            },
+            {
+                label: 'ממוצע',
+                data: spreads.map(s => Math.round(s.avg * 100) / 100),
+                backgroundColor: '#38bdf8',
+                borderRadius: 4,
+            },
+            {
+                label: 'מקסימום',
+                data: spreads.map(s => s.max),
+                backgroundColor: '#f87171',
+                borderRadius: 4,
+            },
+        ]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { labels: { color: '#94a3b8' } },
+            tooltip: { callbacks: { label: ctx => `${ctx.dataset.label}: ${ctx.raw.toFixed(2)} ₪` } }
+        },
+        scales: {
+            x: { ticks: { color: '#e2e8f0', maxRotation: 45, font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', callback: v => v + '₪' }, grid: { color: '#334155' } }
+        }
+    }
+});
+
+// Spread chart
+new Chart(document.getElementById('spread-chart'), {
+    type: 'bar',
+    data: {
+        labels: spreads.map(s => s.name.length > 22 ? s.name.slice(0,20) + '...' : s.name),
+        datasets: [{
+            label: 'פער מחיר %',
+            data: spreads.map(s => s.spreadPct),
+            backgroundColor: spreads.map(s => s.spreadPct > 30 ? '#f87171' : s.spreadPct > 20 ? '#fbbf24' : '#4ade80'),
+            borderRadius: 6,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => `פער: ${ctx.raw}%` } }
+        },
+        scales: {
+            x: { ticks: { color: '#94a3b8', callback: v => v + '%' }, grid: { color: '#334155' } },
+            y: { ticks: { color: '#e2e8f0', font: { size: 10 } }, grid: { display: false } }
+        }
+    }
+});
+
+// ══════════════════════════════════════════
+// SPREADS TABLE
+// ══════════════════════════════════════════
+
 const spreadsTable = document.getElementById('spreads-table');
 spreads.forEach(s => {
     spreadsTable.innerHTML += `<tr>
-        <td>${s.name}</td>
+        <td>${s.name} <span class="tag tag-blue">${s.brand}</span></td>
+        <td style="color:#64748b">${s.code}</td>
         <td>${s.avg.toFixed(2)} &#8362;</td>
         <td class="price-cheap">${s.min.toFixed(2)} &#8362;</td>
         <td class="price-cheap">${s.cheapest.chain}</td>
         <td class="price-expensive">${s.max.toFixed(2)} &#8362;</td>
         <td class="price-expensive">${s.expensive.chain}</td>
-        <td class="${s.spreadPct > 20 ? 'spread-high' : 'spread-low'}">${s.spreadPct}%</td>
+        <td class="${s.spreadPct > 25 ? 'spread-high' : 'spread-low'}">${s.spreadPct}%</td>
     </tr>`;
 });
 
@@ -502,10 +521,9 @@ CITIES.forEach((city, i) => {
 });
 
 function renderCity(city) {
-    document.getElementById('city-chart-title').textContent = `השוואת מחירים - ${city}`;
+    document.getElementById('city-chart-title').textContent = `מוצרי ליימן שלייסל - ${city}`;
     document.getElementById('city-table-title').textContent = `פירוט מוצרים - ${city}`;
 
-    // Gather chains present in this city
     const chainPrices = {};
     PRODUCTS.forEach(p => {
         p.prices.filter(r => r.city === city).forEach(r => {
@@ -524,7 +542,7 @@ function renderCity(city) {
     cityChart = new Chart(document.getElementById('city-chart'), {
         type: 'bar',
         data: {
-            labels: chainAvgs.map(c => c.chain),
+            labels: chainAvgs.map(c => `${c.chain} (${c.count})`),
             datasets: [{
                 label: 'מחיר ממוצע (₪)',
                 data: chainAvgs.map(c => Math.round(c.avg * 100) / 100),
@@ -547,7 +565,6 @@ function renderCity(city) {
         }
     });
 
-    // Products table for this city
     const tbody = document.getElementById('city-table');
     tbody.innerHTML = '';
     PRODUCTS.forEach(p => {
@@ -577,7 +594,8 @@ const prodBtns = document.getElementById('product-buttons');
 PRODUCTS.forEach((p, i) => {
     const btn = document.createElement('span');
     btn.className = 'filter-btn' + (i === 0 ? ' active' : '');
-    btn.textContent = p.name;
+    btn.textContent = p.name.length > 25 ? p.name.slice(0,23) + '...' : p.name;
+    btn.title = p.name;
     btn.onclick = () => {
         document.querySelectorAll('#product-buttons .filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
@@ -587,7 +605,6 @@ PRODUCTS.forEach((p, i) => {
 });
 
 function renderProduct(product) {
-    // Aggregate prices by chain (avg across cities)
     const chainMap = {};
     product.prices.forEach(r => {
         if (!chainMap[r.chain]) chainMap[r.chain] = [];
